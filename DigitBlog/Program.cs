@@ -1,4 +1,5 @@
 using DigitBlog.Models;
+using DigitBlog.Security;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,6 +13,7 @@ namespace DigitBlog
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            builder.Services.AddSingleton<DataSecurityKey>();
             builder.Services.AddDbContext<DigitalBlogContext>(o => o.UseSqlServer(builder.Configuration["Conn"]));
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(o=>o.LoginPath="/Account/Login");
             var app = builder.Build();

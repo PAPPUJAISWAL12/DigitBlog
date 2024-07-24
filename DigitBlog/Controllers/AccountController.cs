@@ -1,7 +1,9 @@
 ﻿using DigitBlog.Models;
+using DigitBlog.Security;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -11,15 +13,23 @@ namespace DigitBlog.Controllers
     public class AccountController : Controller
     {
         private readonly DigitalBlogContext _appContext;
-        public AccountController(DigitalBlogContext dbcontext)
+        private readonly IDataProtector _protector;
+        public AccountController(DigitalBlogContext dbcontext,DataSecurityKey key,IDataProtectionProvider provider)
         {
             _appContext = dbcontext;
+            _protector = provider.CreateProtector(key.DataKey);
         }
+
         [HttpGet]
         public IActionResult Login()
         {
+            if (User.Identity!.IsAuthenticated)
+            {
+                return RedirectToAction("Index","Home");
+            }
             return View();
         }
+
         [HttpPost]
         public async Task<IActionResult> Login(UserListEdit edit)
         {
@@ -29,7 +39,7 @@ namespace DigitBlog.Controllers
                 var user = u.Where(e=>
                 (e.LoginName.ToUpper().Equals
                 (edit.LoginName.ToUpper()) || e.EmailAddress.ToUpper().Equals(edit.EmailAddress.ToUpper()))
-                && e.LoginPassword.Equals(edit.LoginPassword)
+                && _protector.Unprotect(e.LoginPassword).Equals(edit.LoginPassword)
                 && e.LoginStatus==true).FirstOrDefault();
                 if (user != null)
                 {
