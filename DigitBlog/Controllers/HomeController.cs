@@ -9,6 +9,7 @@ using System.Diagnostics;
 
 namespace DigitBlog.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -26,22 +27,25 @@ namespace DigitBlog.Controllers
             _appContext = context;
         }
 
-        [Authorize]
+        [Authorize(Roles ="Admin,Editor")]
         public IActionResult Index()
         {
             return View();
         }
-
+        
         public IActionResult Privacy()
         {
             return View();
         }
+
+        [AllowAnonymous]
         [HttpGet]
         public IActionResult AddUser()
         {
             return View();
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public IActionResult AddUser(UserListEdit edit)
         {
@@ -80,12 +84,26 @@ namespace DigitBlog.Controllers
                 };
                 _appContext.UserLists.Add(u);
                 _appContext.SaveChanges();
-              return Json(u);
+                return RedirectToAction("Login","Account");
             }
             catch(Exception ex)
             {
                 return View(edit);
             }
+        }
+
+        [HttpGet]
+        public IActionResult ProfileImg()
+        {
+            var user = _appContext.UserLists.Where(u => u.UserId == Convert.ToInt16(User.Identity!.Name)).FirstOrDefault();
+            ViewData["img"] = user!.UserProfile;
+            return PartialView("_ProfileImg");
+        }
+
+        public IActionResult ProfileUpdate()
+        {
+            var user = _appContext.UserLists.Where(u => u.UserId == Convert.ToInt16(User.Identity!.Name)).FirstOrDefault();
+            return View(user);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

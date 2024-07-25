@@ -35,7 +35,7 @@ namespace DigitBlog
 
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
+                pattern: "{controller=Static}/{action=Index}/{id?}");
 
             app.Run();
         }
