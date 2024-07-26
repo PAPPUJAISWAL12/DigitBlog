@@ -42,8 +42,9 @@
                                 <div>
                                     <a asp-action="ProfileImg" hidden id="btn-pr" asp-controller="Home" data-ajax="true" data-ajax-method="get" data-ajax-update="#pr-img"> click</a>
                                     <button type="button" id="pr-img" class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600" aria-expanded="false" data-dropdown-toggle="dropdown-user">
+                                        @* <partial name="_ProfileImg" /> *@
                                         <span class="sr-only">Open user menu</span>
-                                        
+                                      
                                     </button>
                                 </div>
                                 <div class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded shadow dark:bg-gray-700 dark:divide-gray-600" id="dropdown-user">
@@ -63,7 +64,7 @@
                                             <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Settings</a>
                                         </li>
                                         <li>
-                                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Earnings</a>
+                                            <a asp-action="ProfileUpdate" asp-controller="Home" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Profile</a>
                                         </li>
                                         <li>
                                             <a asp-action="Logout" asp-controller="Account" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Sign out</a>

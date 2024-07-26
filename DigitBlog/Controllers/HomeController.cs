@@ -100,10 +100,81 @@ namespace DigitBlog.Controllers
             return PartialView("_ProfileImg");
         }
 
+        [HttpGet]
         public IActionResult ProfileUpdate()
         {
             var user = _appContext.UserLists.Where(u => u.UserId == Convert.ToInt16(User.Identity!.Name)).FirstOrDefault();
-            return View(user);
+            ViewBag.psw = user.LoginPassword;
+            if (user == null)
+            {
+                return NotFound();
+            }
+            else
+            {
+                UserListEdit edit = new()
+                {
+                    UserId = user.UserId,
+                    EmailAddress = user.EmailAddress,
+                    FullName = user.FullName,
+                    LoginName = user.LoginName,
+                    LoginPassword = user.LoginPassword,
+                    UserProfile = user.UserProfile,
+                    UserRole = user.UserRole,
+                    LoginStatus = user.LoginStatus,
+                    Phone = user.Phone
+                };
+                return View(edit);
+            }
+            
+        }
+
+        [HttpPost]
+        public IActionResult ProfileUpdate(UserListEdit edit)
+        {
+
+            /*var user = _appContext.UserLists.Where(x => x.UserId == edit.UserId).FirstOrDefault();
+
+            if (user == null)
+            {
+                return NotFound();
+            }*/
+
+            if (edit.UserFile != null)
+                {
+                    string oldFilePath = Path.Combine(_env.WebRootPath, "UserProfile", edit.UserProfile);
+                    if (System.IO.File.Exists(oldFilePath))
+                    {
+                        System.IO.File.Delete(oldFilePath);
+                    }
+
+                string filename = Guid.NewGuid().ToString() + Path.GetExtension(edit.UserFile.FileName);
+                    string path = Path.Combine(_env.WebRootPath, "UserProfile", filename);
+                    using (FileStream str = new FileStream(path, FileMode.Create))
+                    {
+                        edit.UserFile.CopyTo(str);
+                    }
+
+                    edit.UserProfile = filename;
+                }
+
+                UserList u = new()
+                {
+                    UserId = edit.UserId,
+                    UserProfile = edit.UserProfile,
+                    EmailAddress = edit.EmailAddress,
+                    LoginName = edit.LoginName,
+                    LoginPassword = edit.LoginPassword,
+                    FullName = edit.FullName,
+                    LoginStatus = edit.LoginStatus,
+                    Phone = edit.Phone,
+                    UserRole = edit.UserRole
+                };
+                
+                _appContext.Update(u);
+                _appContext.SaveChanges();
+                return Json(u);
+                
+           
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
