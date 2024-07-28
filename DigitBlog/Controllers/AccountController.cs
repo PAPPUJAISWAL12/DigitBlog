@@ -87,5 +87,51 @@ namespace DigitBlog.Controllers
             return RedirectToAction("Index","Static");
         }
 
+        [Authorize]
+        [HttpGet]
+        public IActionResult ChangePassword()
+        {
+            return View();
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> ChangePassword(ChangePsw p)
+        {
+            try {
+                var user = await _appContext.UserLists.Where(c => c.UserId == Convert.ToInt16(User.Identity!.Name)).FirstOrDefaultAsync();
+                if (user != null)
+                {
+                    if (_protector.Unprotect(user.LoginPassword) == p.CurrentPassword)
+                    {
+                        if (p.NewPassword == p.ConfirmPassword)
+                        {
+                            user.LoginPassword = _protector.Protect(p.NewPassword);
+                            _appContext.Update(user);
+                            await _appContext.SaveChangesAsync();
+                            return Json("Success");
+                        }
+                        else
+                        {
+                            ModelState.AddModelError("","Confirm Password does not matched.");
+                            return View(p);
+                        }
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("","Please, Re-Check your Current Password?");
+                        return View(p);
+                    }
+                }
+                else
+                {
+                    return View();
+                }
+            } catch(Exception ex) 
+            {
+                return View(ex);
+            }
+        }
+        
     }
 }

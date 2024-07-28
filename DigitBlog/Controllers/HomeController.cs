@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Razor;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace DigitBlog.Controllers
 {
@@ -165,9 +166,9 @@ namespace DigitBlog.Controllers
                     LoginName = edit.LoginName,
                     LoginPassword = edit.LoginPassword,
                     FullName = edit.FullName,
-                    LoginStatus = edit.LoginStatus,
+                    LoginStatus = true,
                     Phone = edit.Phone,
-                    UserRole = edit.UserRole
+                    UserRole = User.Claims.FirstOrDefault(c=>c.Type==ClaimTypes.Role).Value
                 };
                 
                 _appContext.Update(u);
