@@ -16,6 +16,11 @@ namespace DigitBlog
             builder.Services.AddSingleton<DataSecurityKey>();
             builder.Services.AddDbContext<DigitalBlogContext>(o => o.UseSqlServer(builder.Configuration["Conn"]));
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(o=>o.LoginPath="/Account/Login");
+            builder.Services.AddSession(o =>
+            {
+                o.IdleTimeout = TimeSpan.FromMinutes(2);
+                o.Cookie.HttpOnly=true;
+            });
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -28,7 +33,7 @@ namespace DigitBlog
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
+            app.UseSession();
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();

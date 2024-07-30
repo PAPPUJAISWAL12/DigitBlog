@@ -27,5 +27,7 @@ namespace DigitBlog.Models
 
         [DataType(DataType.Upload)]
         public IFormFile? UserFile { get; set; }
+
+        public int Token { get; set; }
     }
 }

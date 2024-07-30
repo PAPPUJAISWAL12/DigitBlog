@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
+using System.Net.Mail;
 using System.Security.Claims;
 
 namespace DigitBlog.Controllers
@@ -132,6 +134,67 @@ namespace DigitBlog.Controllers
                 return View(ex);
             }
         }
-        
+
+
+        [AllowAnonymous]
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult ForgotPassword(UserListEdit edit)
+        {
+            try
+            {
+                var user = _appContext.UserLists.Where(u => u.EmailAddress == edit.EmailAddress).FirstOrDefault();
+                if (user == null)
+                {
+                    ModelState.AddModelError("","This User Does not exist.");
+                    return View(edit);
+                }
+
+                Random r = new Random();
+                HttpContext.Session.SetString("token",r.Next(9999).ToString());
+                var token = HttpContext.Session.GetString("token");
+
+                SmtpClient smtpClient = new()
+                {
+                    Host = "smtp.gmail.com",
+                    Port = 587,
+                    UseDefaultCredentials = false,
+                    Credentials = new NetworkCredential("jaiswalpappu873@gmail.com", "tbsd sxte srxb ublz"),//gmail_id, app Password
+                    EnableSsl = true,
+                    DeliveryMethod=SmtpDeliveryMethod.Network
+                };
+
+                MailMessage m = new()
+                {
+                    From = new MailAddress("jaiswalpappu873@gmail.com"),
+                    Subject = "forgot Password",
+                    Body = $"<a style='background-color:Green; color:white; padding:5px;' href='https://localhost:7092/Account/ResetPassword/{_protector.Protect(token)}'>ResetPassword</a> " +
+                    $"<p>token number:{token}</p>",
+                    IsBodyHtml=true
+                };
+
+                m.To.Add(user.EmailAddress);
+                smtpClient.Send(m);
+                return RedirectToAction("VerrifyToken");
+            }
+            catch(Exception ex)
+            {
+                return View(ex);
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        public IActionResult VerrifyToken()
+        {
+            return View();
+        }
+
+
     }
 }
