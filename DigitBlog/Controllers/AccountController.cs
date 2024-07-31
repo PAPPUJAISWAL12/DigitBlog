@@ -157,6 +157,7 @@ namespace DigitBlog.Controllers
 
                 Random r = new Random();
                 HttpContext.Session.SetString("token",r.Next(9999).ToString());
+                HttpContext.Session.SetString("id",_protector.Protect(user.UserId.ToString()));
                 var token = HttpContext.Session.GetString("token");
 
                 SmtpClient smtpClient = new()
@@ -173,14 +174,14 @@ namespace DigitBlog.Controllers
                 {
                     From = new MailAddress("jaiswalpappu873@gmail.com"),
                     Subject = "forgot Password",
-                    Body = $"<a style='background-color:Green; color:white; padding:5px;' href='https://localhost:7092/Account/ResetPassword/{_protector.Protect(token)}'>ResetPassword</a> " +
+                    Body = $"<a style='background-color:Green; color:white; padding:5px;' href='https://localhost:7092/Account/ResetPassword/{_protector.Protect(token!)}'>ResetPassword</a> " +
                     $"<p>token number:{token}</p>",
                     IsBodyHtml=true
                 };
 
                 m.To.Add(user.EmailAddress);
                 smtpClient.Send(m);
-                return RedirectToAction("VerrifyToken");
+                return RedirectToAction("VerifyToken");
             }
             catch(Exception ex)
             {
@@ -190,11 +191,93 @@ namespace DigitBlog.Controllers
 
         [AllowAnonymous]
         [HttpGet]
-        public IActionResult VerrifyToken()
+        public IActionResult VerifyToken()
         {
             return View();
         }
 
+        [HttpPost]
+        public IActionResult VerifyToken(UserListEdit edit)
+        {
+            
+            try
+            {
+                var token = HttpContext.Session.GetString("token");
+                int t = Convert.ToInt32(token);
+            
+                if (edit.Token ==t)
+                {                  
+                    return RedirectToAction("ResetPassword", new { id = _protector.Protect(token!) });
+                }
+                else
+                {
+                    return View(edit);
+                }
+            }
+            catch(Exception ex)
+            {
+                return Json(ex);
+                return View();
+            }
+
+        }
+
+        [HttpGet]
+        public  IActionResult ResetPassword(string id)
+        {
+
+            try
+            {
+                var token = _protector.Unprotect(id);
+                var t = HttpContext.Session.GetString("token");
+                
+                if (t==token)
+                {
+                    var uid =HttpContext.Session.GetString("id");
+                    if (uid == null)
+                    {
+                        return Json("null Id");
+                    }
+
+                    
+                    ChangePsw p = new() { UserId=uid};
+
+                    return View(p);
+                }
+                else
+                {
+                    return RedirectToAction("ForgotPassword");
+                }
+            }
+            catch
+            {
+                return RedirectToAction("ForgotPassword");
+            }
+        }
+        [HttpPost]
+        public IActionResult ResetPassword(ChangePsw p)
+        {
+            int uid = Convert.ToInt16(_protector.Unprotect(p.UserId));
+            var user = _appContext.UserLists.Where(u => u.UserId == uid).FirstOrDefault();
+            if (user == null)
+            {
+                return Json("null");
+            }
+
+            if (p.NewPassword == p.ConfirmPassword)
+            {
+                user.LoginPassword = _protector.Protect(p.NewPassword);
+                _appContext.Update(user);
+                _appContext.SaveChanges();
+                return RedirectToAction("Login");
+            }
+            else
+            {
+                ModelState.AddModelError("","Confirm Password");
+                return View(p);
+            }
+            
+        }
 
     }
 }
