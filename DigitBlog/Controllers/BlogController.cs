@@ -1,8 +1,10 @@
 ﻿using DigitBlog.Models;
 using DigitBlog.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
 
 namespace DigitBlog.Controllers
 {
@@ -23,7 +25,13 @@ namespace DigitBlog.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var blogList = await _appContext.Blogs.Include(u=>u.User).ToListAsync();
+            
+            return View();
+        }
+
+        public async Task<IActionResult> GetBlogList(BlogEdit edit)
+        {
+            var blogList = await _appContext.Blogs.Include(u => u.User).Where(b=>b.Bstatus==edit.Bstatus).ToListAsync();
             var bgList = blogList.Select(e => new BlogEdit
             {
                 Bid = e.Bid,
@@ -36,19 +44,54 @@ namespace DigitBlog.Controllers
                 UserId = e.UserId,
                 PublishedBy = e.User.FullName
             }).ToList();
-            return View(bgList);
+            return PartialView("_GetBlogList",bgList);
         }
 
-
+        [Authorize(Roles ="Admin,Editor")]
         [HttpGet]
         public IActionResult AddBlog()
         {
             return View();
         }
 
+        [Authorize(Roles = "Admin,Editor")]
         [HttpPost]
         public IActionResult AddBlog(BlogEdit edit)
         {
+            long BId = _appContext.Blogs.Any() ? _appContext.Blogs.Max(m => m.Bid) + 1 : 1;
+            edit.Bid = BId;
+
+            string filename = Guid.NewGuid().ToString() + Path.GetExtension(edit.BlogFile!.FileName);
+            string path = Path.Combine(_env.WebRootPath, "Images/Blogs", filename);
+            if (edit.BlogFile != null)
+            {
+                using (FileStream stream = new FileStream(path, FileMode.Create))
+                {
+                    edit.BlogFile.CopyTo(stream);
+                }
+                edit.BlogImage = filename;
+            }
+
+            Blog b = new()
+            {
+                Bid = edit.Bid,
+                Amount = edit.Amount,
+                Bdescription = edit.Bdescription,
+                BlogImage = edit.BlogImage,
+                BlogPostDate = DateOnly.FromDateTime(DateTime.Today),
+                Bstatus = edit.Bstatus,
+                Title = edit.Title,
+                UserId = Convert.ToInt16(User.Identity!.Name)
+            };
+            _appContext.Add(b);
+            _appContext.SaveChanges();
+            return Json(b);
+            try
+            {
+                
+            }catch(Exception ex){
+                return Json(ex);
+            }
             return View(edit);
         }
 

@@ -216,7 +216,7 @@ namespace DigitBlog.Controllers
             }
             catch(Exception ex)
             {
-                return Json(ex);
+               
                 return View();
             }
 
