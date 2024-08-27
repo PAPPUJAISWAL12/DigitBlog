@@ -95,6 +95,97 @@ namespace DigitBlog.Controllers
             return View(edit);
         }
 
+        [Authorize(Roles ="Admin")]
+        public IActionResult Edit(int id)
+        {
+            if (id == 0)
+            {
+                return NotFound();
+            }
+
+            var blogs = _appContext.Blogs.Where(b=>b.Bid==id).Include(b=>b.User).First();
+            if (blogs != null)
+            {
+                BlogEdit e = new()
+                {
+                    Bid = blogs.Bid,
+                    Title = blogs.Title,
+                    Amount = blogs.Amount,
+                    Bdescription = blogs.Bdescription,
+                    BlogImage = blogs.BlogImage,
+                    BlogPostDate = blogs.BlogPostDate,
+                    Bstatus = blogs.Bstatus,
+                    UserId = blogs.UserId,
+                    PublishedBy = blogs.User.FullName
+                };
+             
+                return View(e);
+            }
+            else
+            {
+                return Content("try again!.");
+            }
+          
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        public IActionResult Edit(BlogEdit edit)
+        {
+            
+           
+            if (edit.BlogFile != null)
+            {
+                string filename = Guid.NewGuid().ToString() + Path.GetExtension(edit.BlogFile!.FileName);
+                string path = Path.Combine(_env.WebRootPath, "Images/Blogs", filename);
+                using (FileStream stream = new FileStream(path, FileMode.Create))
+                {
+                    edit.BlogFile.CopyTo(stream);
+                }
+                edit.BlogImage = filename;
+            }
+
+            Blog b = new()
+            {
+                Bid = edit.Bid,
+                Amount = edit.Amount,
+                Bdescription = edit.Bdescription,
+                BlogImage = edit.BlogImage,
+                BlogPostDate = DateOnly.FromDateTime(DateTime.Today),
+                Bstatus = edit.Bstatus,
+                Title = edit.Title,
+                UserId = Convert.ToInt16(User.Identity!.Name)
+            };
+            _appContext.Update(b);
+            _appContext.SaveChanges();
+            return Content("success");
+            try
+            {
+
+            }
+            catch (Exception ex)
+            {
+                return Json(ex);
+            }
+            return View(edit);
+        }
+
+
+        [Authorize(Roles ="Admin")]
+        public IActionResult Delete(int id)
+        {
+            var blogs = _appContext.Blogs.Where(x => x.Bid == id).First();
+            if (blogs != null)
+            {
+                _appContext.Remove(blogs);
+                _appContext.SaveChanges();
+                return Content("success");
+            }
+            else
+            {
+                return Content("Failed");
+            }
+        }
 
     }
 }
