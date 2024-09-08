@@ -187,5 +187,22 @@ namespace DigitBlog.Controllers
             }
         }
 
+        public IActionResult Success(string q, string oid, string amt, string refId)
+        {
+            return Json(oid);
+            Blog? sub = _appContext.Blogs.Where(x => x.Bid == Convert.ToInt32(oid)).FirstOrDefault();
+            if (sub != null)
+            {
+                string msg = "Payment Successful. Rs. " + amt;
+                return View((object)msg);
+            }
+            return View();
+            
+        }
+        public IActionResult Failure()
+        {
+            return View();
+        }
+
     }
 }
