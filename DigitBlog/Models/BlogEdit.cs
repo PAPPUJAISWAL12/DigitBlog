@@ -24,5 +24,6 @@ namespace DigitBlog.Models
         public string Bstatus { get; set; } = null!;
 
         public decimal Amount { get; set; }
+        public string BlogEncId { get; set; }
     }
 }

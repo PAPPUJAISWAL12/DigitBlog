@@ -32,6 +32,7 @@
                     @if (item.Bstatus =="Paid")
                     {
                         var netAmt = item.Amount;
+                        var id = item.BlogEncId;
                         <form action="https://uat.esewa.com.np/epay/main" method="POST">
                             <input value="@netAmt" name="tAmt" type="hidden">
                             <input value="@netAmt" name="amt" type="hidden">
@@ -39,7 +40,7 @@
                             <input value="0" name="psc" type="hidden">
                             <input value="0" name="pdc" type="hidden">
                             <input value="EPAYTEST" name="scd" type="hidden">
-                            <input value="65564" name="pid" type="hidden">
+                            <input value="@id" name="pid" type="hidden">
                             <input value="https://localhost:7092/Blog/Success?q=su" type="hidden" name="su">
                             <input value="https://localhost:7092/Blog/Failure?q=fu" type="hidden" name="fu">
                             <input value="e-Sewa" class="bg-green-600 hover:bg-green-800 px-3 py-3  m-1" type="submit">

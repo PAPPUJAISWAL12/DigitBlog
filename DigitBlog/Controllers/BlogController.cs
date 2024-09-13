@@ -42,7 +42,8 @@ namespace DigitBlog.Controllers
                 Bstatus = e.Bstatus,
                 Title = e.Title,
                 UserId = e.UserId,
-                PublishedBy = e.User.FullName
+                PublishedBy = e.User.FullName,
+                BlogEncId=_protector.Protect(e.Bid.ToString())
             }).ToList();
             return PartialView("_GetBlogList",bgList);
         }
@@ -187,17 +188,27 @@ namespace DigitBlog.Controllers
             }
         }
 
+        [Authorize]
         public IActionResult Success(string q, string oid, string amt, string refId)
         {
-            return Json(oid);
-            Blog? sub = _appContext.Blogs.Where(x => x.Bid == Convert.ToInt32(oid)).FirstOrDefault();
+            var bid = _protector.Unprotect(oid);
+            Blog? sub = _appContext.Blogs.Where(x => x.Bid == Convert.ToInt32(bid)).FirstOrDefault();
             if (sub != null)
             {
+                var Subid=(_appContext.BlogSubscriptions.Any()) ? _appContext.BlogSubscriptions.Max(x=>x.SubId)+1 : 1;
+                BlogSubscription s = new()
+                {
+                    SubId = Subid,
+                    Bid = sub.Bid,
+                    SubAmount = Convert.ToDecimal(amt),
+                    UserId = Convert.ToInt16(User.Identity!.Name)
+                };
+                _appContext.Add(s);
+                _appContext.SaveChanges();
                 string msg = "Payment Successful. Rs. " + amt;
                 return View((object)msg);
             }
-            return View();
-            
+            return View();            
         }
         public IActionResult Failure()
         {
